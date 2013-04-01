@@ -388,8 +388,15 @@ bool Maxclique::detect_clique(Vertices &R) {
 			QMAX = Q;
 			for (int i = 0; i < R.size(); ++i) {
 				QMAX.push(R.at(i).get_i());
+				if ( i != R.size() - 1) {
+					++pk;
+					S[level + i].inc_i1();
+					S[level + i + 1].set_i1(S[level + i + 1].get_i1() + S[level + i + 1- 1].get_i1() - S[level + i + 1].get_i2());
+					S[level + i + 1].set_i2(S[level + i + 1 - 1].get_i1());
+				}
+
 			}
-			std::cout << "step = " << pk << " current max. clique size = " << QMAX.size() << std::endl; 
+			std::cout << "R.size() = " << R.size() << "step = " << pk << " current max. clique size = " << QMAX.size() << std::endl; 
 		}
 		return true;
 	}
@@ -412,6 +419,13 @@ void Maxclique::detect_clique_vertices(Vertices &R) {
 		Q.push(clq_v);
 		CLIQUE_VERTEX.push(clq_v);
 		R.pop(clq_v); //how to do ?
+		if(R.size()) {
+			++pk;
+			S[level].inc_i1();
+			++level;
+			S[level].set_i1(S[level].get_i1() + S[level - 1].get_i1() - S[level].get_i2());
+			S[level].set_i2(S[level - 1].get_i1());
+		}
 next_color:
 		;
 	}
@@ -459,13 +473,13 @@ void Maxclique::expand_dyn(Vertices R) {
 					degree_sort(Rp);
 				}
 				re_color_sort(Rp);
-			/*	
+				
 				if (detect_clique(Rp)) {
 					goto next_vertex;
 				}
-				else
-					detect_clique_vertices(Rp);
-			*/		
+				//else
+				//	detect_clique_vertices(Rp);
+					
 				S[level].inc_i1();
 				level++;
 				expand_dyn(Rp);
@@ -480,6 +494,7 @@ next_vertex:
 			while(CLIQUE_VERTEX.size() != 0 && Q.end() == CLIQUE_VERTEX.end()) {
 				Q.pop();
 				CLIQUE_VERTEX.pop();
+				--level;
 			}
 			Q.pop();
 		}
