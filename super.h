@@ -306,12 +306,13 @@ void Maxclique::re_color_sort(Vertices &R) {
 			maxno = k;
 			C[maxno + 1].rewind();
 			
-			if (k >= min_k) {
-				k = re_color(k);
-				if(C[maxno].size() == 0)
-					maxno -= 1;
-			}
 			
+			
+		}
+		if (k == maxno && k >= min_k) {
+			k = re_color(k);
+			if(C[maxno].size() == 0)
+				maxno -= 1;
 		}
 		if (k < min_k) {
 			R.at(j++).set_i(pi);
