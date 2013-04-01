@@ -477,8 +477,9 @@ void Maxclique::expand_dyn(Vertices R) {
 				if (detect_clique(Rp)) {
 					goto next_vertex;
 				}
-				//else
-				//	detect_clique_vertices(Rp);
+				
+				else
+					detect_clique_vertices(Rp);
 					
 				S[level].inc_i1();
 				level++;
