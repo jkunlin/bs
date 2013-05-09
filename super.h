@@ -20,6 +20,7 @@ class Maxclique {
 			int get_i() const { return i; }
 			void set_degree(int dd) { d = dd; }
 			int get_degree() const { return d; }
+			int decs_degree() { --d; }
 		};
 		Vertex *v;
 		int sz;
@@ -46,6 +47,7 @@ class Maxclique {
 		void pop_index(const int index);
 		Vertex& at(const int ii) const { return v[ii]; };
 		Vertex& end() const { return v[sz - 1]; };
+		void resize() { sz = 0; }
 	};
 	class ColorClass {
 		int *i;
@@ -108,6 +110,14 @@ class Maxclique {
 	void expand_dyn_mcs(Vertices, Vertices);
 	void _mcq(int*&, int&, bool);
 	void degree_sort(Vertices &R) { R.set_degrees(*this); R.sort(); }
+	void MCR_sort(Vertices &R);
+	void remove_small_degree_vertex(Vertices &R) {
+		for (int i = R.size() - 1; i > 0; --i ) {
+			if( R.at(i).get_degree() > QMAX.size() - Q.size())
+				return;
+			R.pop();
+		}
+	}
 public:
 #ifdef DBG
 	void dbg_C() const {
@@ -172,15 +182,22 @@ void Maxclique::permute_vertices() {
 }
 
 void Maxclique::_mcq(int* &maxclique, int &sz, bool dyn) { 
-	V.set_degrees(*this);
-	V.sort();
+	//V.set_degrees(*this);
+	//V.sort();
+	
+	//degree_sort(R);
+
+	MCR_sort(V);
+//	degree_sort(V);
 	permute_vertices();
-	V.init_colors();
 	Vertices Va(V.size());
 	for (int i = 0; i < V.size(); ++i) {
 		Va.push(V.at(i).get_i());
-		Va.at(i).set_degree(V.at(i).get_degree());
 	}
+//	V.init_colors();
+	//V.resize();
+	//re_color_sort_mcs(V, Va);
+	color_sort(V);
 	
 	if (dyn) {
 		for (int i=0; i < V.size() + 1; i++) {
@@ -206,6 +223,45 @@ void Maxclique::Vertices::init_colors() {
 	for (int i = max_degree; i < sz; i++)
 		v[i].set_degree(max_degree + 1);
 }
+
+
+void Maxclique::MCR_sort(Vertices &R) {
+	R.set_degrees(*this);
+	int sz = R.size();
+	int min_degree;
+	int min_index;
+	Vertices Rp(sz);
+	for(int i=0; i < sz; i++) {
+		//find the vertex with min degree
+		Rp.resize();
+		min_degree = R.at(0).get_degree();
+		min_index = 0;
+		Rp.push(R.at(0).get_i());
+
+		for(int j=1; j < sz - i; j++) {
+			if(R.at(j).get_degree() == min_degree) {
+				Rp.push(R.at(j).get_i());
+			}
+			else if(R.at(j).get_degree() < min_degree) {
+				min_degree = R.at(j).get_degree();
+				min_index = j;
+				Rp.resize();
+				Rp.push(R.at(j).get_i());
+			}
+		}
+		//regular subgraph
+		if(Rp.size() == sz - i) 
+			break;
+		std::swap(R.at(min_index), R.at(sz - i - 1));
+
+		//update degrees
+		for(int j = 0; j < sz - i - 1; j++) {
+			if(connection(R.at(sz - i - 1).get_i(), R.at(j).get_i()))
+				R.at(j).decs_degree();
+		}
+	}
+}
+
 
 void Maxclique::Vertices::set_degrees(Maxclique &m) { 
 	for (int i=0; i < sz; i++) {
@@ -248,7 +304,7 @@ bool Maxclique::conflict(const int pi, const ColorClass &A) {
 }
 
 void Maxclique::cut_mcs(const Vertices &A, Vertices &B, const int pi) {
-	for (int i = 0; i < A.size() - 1; ++i) {
+	for (int i = 0; i < A.size(); ++i) {
 		if (connection(pi, A.at(i).get_i()))
 			B.push(A.at(i).get_i());
 	}
@@ -317,7 +373,7 @@ void Maxclique::color_sort(Vertices &R) {
 			R.at(j++).set_degree(k);
 		}
 }
-
+/* when with detect clique vetex. have bug
 void Maxclique::re_color_sort_mcs(Vertices &R, Vertices &Ra) {
 	int j = 0;
 	int maxno = 1;
@@ -354,7 +410,39 @@ void Maxclique::re_color_sort_mcs(Vertices &R, Vertices &Ra) {
 		}
 
 }
+*/
 
+void Maxclique::re_color_sort_mcs(Vertices &R, Vertices &Ra) {
+	int maxno = 1;
+	int min_k = QMAX.size() - Q.size() + 1;
+	C[1].rewind();
+	C[2].rewind();
+	int k = 1;
+	for (int i=0; i < Ra.size(); i++) {
+		int pi = Ra.at(i).get_i();
+		k = 1;
+		while (conflict(pi, C[k]))
+			k++;
+		C[k].push(pi);
+		if (k > maxno) {
+			maxno = k;
+			C[maxno + 1].rewind();
+		}
+		if (k == maxno && k >= min_k) {
+			k = re_color(k);
+			if(C[maxno].size() == 0)
+				maxno -= 1;
+		}
+	}
+
+	int j = 0;
+	for (k = 1; k <= maxno; k++)
+		for (int i = 0; i < C[k].size(); i++) {
+			R.push(C[k].at(i));
+			R.at(j++).set_degree(k);
+		}
+
+}
 void Maxclique::re_color_sort(Vertices &R) {
 	int j = 0;
 	int maxno = 1;
@@ -581,10 +669,11 @@ void Maxclique::expand_dyn_mcs(Vertices R, Vertices Ra) {
 			if (Rap.size()) {
 				Vertices Rp(R.size());
 				if ((float)S[level].get_i1()/++pk < Tlimit) {
-					degree_sort(Rap);
+					//degree_sort(Rap);
+				//	remove_small_degree_vertex(Rap);
+					MCR_sort(Rap);
 				}
-				re_color_sort_mcs(Rp, Rap);
-				
+				re_color_sort_mcs(Rp, Rap); // Rp has to be empty
 				if (detect_clique(Rp)) {
 					Rp.dispose();
 					goto next_vertex;

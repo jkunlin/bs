@@ -1,0 +1,16 @@
+args = brock400_2.clq
+|E| = 59786  |V| = 400 p = 0.749198
+step = 16 current max. clique size = 17
+R.size() = 2step = 95 current max. clique size = 18
+step = 198 current max. clique size = 19
+R.size() = 1step = 248 current max. clique size = 20
+R.size() = 3step = 471 current max. clique size = 21
+R.size() = 4step = 55605 current max. clique size = 22
+R.size() = 1step = 326100 current max. clique size = 23
+R.size() = 7step = 741531 current max. clique size = 29
+Maximum clique: 30 35 78 114 175 176 188 197 216 222 223 229 249 250 256 267 284 286 294 298 304 309 322 327 328 332 349 393 397 
+Size = 29
+Number of steps = 16453372
+Time = 93
+Time (precise) = 92.28
+

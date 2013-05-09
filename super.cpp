@@ -24,15 +24,15 @@ void read_dimacs(string name, bool** &conn, int &size) {
 			e.insert(make_pair(vi, vj));
 		}
 	}
-	size = *v.rbegin();
+	size = *v.rbegin() + 1;
 	conn = new bool*[size];
 	for (int i=0; i < size; i++) {
 		conn[i] = new bool[size];
 		memset(conn[i], 0, size * sizeof(bool));
 	}
 	for (multimap<int,int>::iterator it = e.begin(); it != e.end(); it++) {
-		conn[it->first - 1][it->second - 1] = true;
-		conn[it->second - 1][it->first - 1] = true;
+		conn[it->first][it->second] = true;
+		conn[it->second][it->first] = true;
 	}
 	cout << "|E| = " << e.size() << "  |V| = " << v.size() << " p = " << (double) e.size() / (v.size() * (v.size() - 1) / 2) << endl;
 	f.close();
@@ -65,12 +65,12 @@ int main(int argc, char *argv[]) {
 	}
 	cout << "Maximum clique: ";
 	for (int i = 0; i < qsize; i++) 
-		cout << qmax[i] + 1<< " ";
+		cout << qmax[i]<< " ";
 	cout << endl;
 	cout << "Size = " << qsize << endl;
 	cout << "Number of steps = " << md.steps() << endl;
-		cout << "Time = " << difftime(time(NULL), start1) << endl;
-		cout << "Time (precise) = " << ((double) (clock() - start2)) / CLOCKS_PER_SEC << endl << endl;
+	cout << "Time = " << difftime(time(NULL), start1) << endl;
+	cout << "Time (precise) = " << ((double) (clock() - start2)) / CLOCKS_PER_SEC << endl << endl;
 	delete [] qmax;
 	for (int i=0;i<size;i++)
 		delete [] conn[i];
